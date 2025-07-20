@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Readiness Assessment Framework - Gantt Chart</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .gantt-container {
+            padding: 30px;
+        }
+        
+        .timeline-header {
+            display: flex;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .task-column {
+            width: 400px;
+            font-weight: 600;
+            padding-right: 30px;
+            font-size: 16px;
+        }
+        
+        .timeline-weeks {
+            display: flex;
+            flex: 1;
+            justify-content: space-between;
+        }
+        
+        .week-label {
+            width: 50px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin: 0 1px;
+        }
+        
+        .gantt-row {
+            display: flex;
+            border-bottom: 1px solid #e9ecef;
+            min-height: 60px;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .gantt-row:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+        
+        .task-name {
+            width: 400px;
+            padding: 15px 30px 15px 20px;
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 15px;
+        }
+        
+        .phase-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 700;
+            padding: 20px 30px 20px 20px;
+            font-size: 18px;
+            border-radius: 8px 0 0 8px;
+            margin: 10px 0;
+        }
+        
+        .timeline-container {
+            flex: 1;
+            position: relative;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+        }
+        
+        .timeline-bar {
+            height: 35px;
+            border-radius: 8px;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.4s ease;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        
+        .timeline-bar:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+        
+        .critical-path {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border: 3px solid #a93226;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+        
+        .normal-task {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border: 2px solid #2471a3;
+        }
+        
+        .dependent-task {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            border: 2px solid #d68910;
+        }
+        
+        .milestone {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            border: 3px solid #1e8449;
+            position: relative;
+            border-radius: 50px;
+        }
+        
+        .milestone::before {
+            content: '◆';
+            position: absolute;
+            left: -15px;
+            font-size: 20px;
+            color: #27ae60;
+            animation: bounce 1.5s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-5px); }
+            60% { transform: translateY(-3px); }
+        }
+        
+        .timeline-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+        }
+        
+        .timeline-week {
+            flex: 1;
+            border-right: 2px solid #ecf0f1;
+            opacity: 0.3;
+        }
+        
+        .timeline-week:nth-child(4n) {
+            border-right: 3px solid #bdc3c7;
+            opacity: 0.6;
+        }
+        
+        .progress-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .dependency-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-left: 12px solid #34495e;
+            right: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 5;
+            animation: arrow-pulse 1.5s infinite;
+        }
+        
+        @keyframes arrow-pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+            padding: 25px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .legend-color {
+            width: 25px;
+            height: 25px;
+            border-radius: 6px;
+            border: 2px solid #34495e;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .phase-summary {
+            background: linear-gradient(135deg, #ecf0f1, #d5dbdb);
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 10px;
+            border-left: 6px solid #3498db;
+            font-size: 14px;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+        
+        .phase-summary strong {
+            color: #e74c3c;
+            font-size: 16px;
+        }
+        
+        .duration-label {
+            font-size: 10px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+        
+        @media (max-width: 1200px) {
+            .task-column, .task-name {
+                width: 300px;
+            }
+            
+            .week-label {
+                width: 40px;
+                font-size: 12px;
+            }
+            
+            .timeline-bar {
+                height: 30px;
+                font-size: 10px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .gantt-container {
+                padding: 15px;
+            }
+            
+            .task-column, .task-name {
+                width: 200px;
+                font-size: 13px;
+            }
+            
+            .timeline-bar {
+                height: 25px;
+                font-size: 9px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Cloud Readiness Assessment Framework</h1>
+            <p>16-Week Migration Planning Gantt Chart with Horizontal Bar Lines</p>
+        </div>
+        
+        <div class="gantt-container">
+            <div class="timeline-header">
+                <div class="task-column">Phase / Migration Task</div>
+                <div class="timeline-weeks">
+                    <div class="week-label">W1</div>
+                    <div class="week-label">W2</div>
+                    <div class="week-label">W3</div>
+                    <div class="week-label">W4</div>
+                    <div class="week-label">W5</div>
+                    <div class="week-label">W6</div>
+                    <div class="week-label">W7</div>
+                    <div class="week-label">W8</div>
+                    <div class="week-label">W9</div>
+                    <div class="week-label">W10</div>
+                    <div class="week-label">W11</div>
+                    <div class="week-label">W12</div>
+                    <div class="week-label">W13</div>
+                    <div class="week-label">W14</div>
+                    <div class="week-label">W15</div>
+                    <div class="week-label">W16</div>
+                </div>
+            </div>
+            
+            <!-- Phase 1: Project Initialization -->
+            <div class="gantt-row">
+                <div class="task-name phase-header">Phase 1: Project Initialization</div>
+                <div class="timeline-container">
+                    <div class="timeline-grid">
+                        <div class="timeline-week"></div>
+                        <div class="timeline-week"></div>
+                        <div class="timeline-week"></div>
+                        <div class="timeline-week"></div>
+                        <div class="timeline-week"></div>
+                        <div class="timeline-week"></div>
+                        <div class="timeline-week"></div>
+                        <div class="timeline-week"></div>
+                        <div class="timeline-week"></div>
+                        <div class="timeline-week"></div>
+                        <div class="timeline-week"></div>
+                        <div class="timeline-week"></div>
+                        <div class="timeline-week"></div>
+                        <div class="timeline-week"></div>
+                        <div class="timeline-week"></div>
+                        <div class="timeline-week"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Stakeholder Alignment & Project Charter
+                    <div class="duration-label">Duration: 2 weeks</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar critical-path" style="left: 0%; width: 12.5%;">
+                        CRITICAL PATH
+                        <div class="progress-indicator" style="width: 100%;">100%</div>
+                    </div>
+                    <div class="dependency-arrow" style="left: 12.5%;"></div>
+                </div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Resource Allocation & Team Formation
+                    <div class="duration-label">Duration: 1 week</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar normal-task" style="left: 6.25%; width: 6.25%;">
+                        RESOURCES
+                        <div class="progress-indicator" style="width: 100%;">100%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Initial Risk Assessment & Planning
+                    <div class="duration-label">Duration: 1 week</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar dependent-task" style="left: 6.25%; width: 6.25%;">
+                        RISK PLAN
+                        <div class="progress-indicator" style="width: 100%;">100%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Phase 2: Discovery & Inventory -->
+            <div class="gantt-row">
+                <div class="task-name phase-header">Phase 2: Discovery & Inventory</div>
+                <div class="timeline-container"></div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">IT Infrastructure Discovery & Mapping
+                    <div class="duration-label">Duration: 3 weeks</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar critical-path" style="left: 12.5%; width: 18.75%;">
+                        INFRASTRUCTURE
+                        <div class="progress-indicator" style="width: 85%;">85%</div>
+                    </div>
+                    <div class="dependency-arrow" style="left: 31.25%;"></div>
+                </div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Data Asset Inventory & Classification
+                    <div class="duration-label">Duration: 2 weeks</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar normal-task" style="left: 18.75%; width: 12.5%;">
+                        DATA ASSETS
+                        <div class="progress-indicator" style="width: 70%;">70%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Application Portfolio Documentation
+                    <div class="duration-label">Duration: 2 weeks</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar dependent-task" style="left: 18.75%; width: 12.5%;">
+                        APPS DOCS
+                        <div class="progress-indicator" style="width: 60%;">60%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Phase 3: Technical Assessment -->
+            <div class="gantt-row">
+                <div class="task-name phase-header">Phase 3: Technical Assessment</div>
+                <div class="timeline-container"></div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Application Portfolio Classification
+                    <div class="duration-label">Duration: 3 weeks</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar critical-path" style="left: 31.25%; width: 18.75%;">
+                        APP CLASSIFY
+                        <div class="progress-indicator" style="width: 40%;">40%</div>
+                    </div>
+                    <div class="dependency-arrow" style="left: 50%;"></div>
+                </div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Performance Analysis & Optimization
+                    <div class="duration-label">Duration: 2 weeks</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar normal-task" style="left: 37.5%; width: 12.5%;">
+                        PERFORMANCE
+                        <div class="progress-indicator" style="width: 25%;">25%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Network Architecture Review
+                    <div class="duration-label">Duration: 2 weeks</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar critical-path" style="left: 37.5%; width: 12.5%;">
+                        NETWORK
+                        <div class="progress-indicator" style="width: 30%;">30%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Phase 4: Business & Financial Analysis -->
+            <div class="gantt-row">
+                <div class="task-name phase-header">Phase 4: Business & Financial Analysis</div>
+                <div class="timeline-container"></div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Business Case Development
+                    <div class="duration-label">Duration: 3 weeks</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar normal-task" style="left: 50%; width: 18.75%;">
+                        BUSINESS CASE
+                        <div class="progress-indicator" style="width: 15%;">15%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Financial Modeling & ROI Analysis
+                    <div class="duration-label">Duration: 2 weeks</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar dependent-task" style="left: 56.25%; width: 12.5%;">
+                        ROI ANALYSIS
+                        <div class="progress-indicator" style="width: 10%;">10%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Process Impact Assessment
+                    <div class="duration-label">Duration: 2 weeks</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar normal-task" style="left: 56.25%; width: 12.5%;">
+                        PROCESS
+                        <div class="progress-indicator" style="width: 5%;">5%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Phase 5: Security & Compliance -->
+            <div class="gantt-row">
+                <div class="task-name phase-header">Phase 5: Security & Compliance</div>
+                <div class="timeline-container"></div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Security Posture Assessment
+                    <div class="duration-label">Duration: 2 weeks</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar critical-path" style="left: 68.75%; width: 12.5%;">
+                        SECURITY
+                        <div class="progress-indicator" style="width: 0%;">0%</div>
+                    </div>
+                    <div class="dependency-arrow" style="left: 81.25%;"></div>
+                </div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Compliance Framework Review
+                    <div class="duration-label">Duration: 2 weeks</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar normal-task" style="left: 68.75%; width: 12.5%;">
+                        COMPLIANCE
+                        <div class="progress-indicator" style="width: 0%;">0%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Risk Analysis & Mitigation Planning
+                    <div class="duration-label">Duration: 1 week</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar dependent-task" style="left: 75%; width: 6.25%;">
+                        RISK MIT
+                        <div class="progress-indicator" style="width: 0%;">0%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Phase 6: Strategy & Planning -->
+            <div class="gantt-row">
+                <div class="task-name phase-header">Phase 6: Strategy & Planning</div>
+                <div class="timeline-container"></div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Migration Planning & Wave Definition
+                    <div class="duration-label">Duration: 2 weeks</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar critical-path" style="left: 81.25%; width: 12.5%;">
+                        MIGRATION
+                        <div class="progress-indicator" style="width: 0%;">0%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Cloud Provider Selection & Evaluation
+                    <div class="duration-label">Duration: 2 weeks</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar normal-task" style="left: 81.25%; width: 12.5%;">
+                        PROVIDER
+                        <div class="progress-indicator" style="width: 0%;">0%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Architecture Design & Validation
+                    <div class="duration-label">Duration: 1 week</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar dependent-task" style="left: 87.5%; width: 6.25%;">
+                        DESIGN
+                        <div class="progress-indicator" style="width: 0%;">0%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Phase 7: Implementation Preparation -->
+            <div class="gantt-row">
+                <div class="task-name phase-header">Phase 7: Implementation Preparation</div>
+                <div class="timeline-container"></div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Final Recommendations & Documentation
+                    <div class="duration-label">Duration: 1 week</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar milestone" style="left: 93.75%; width: 6.25%;">
+                        MILESTONE
+                        <div class="progress-indicator" style="width: 0%;">0%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Change Management & Training Planning
+                    <div class="duration-label">Duration: 1 week</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar normal-task" style="left: 93.75%; width: 6.25%;">
+                        CHANGE
+                        <div class="progress-indicator" style="width: 0%;">0%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gantt-row">
+                <div class="task-name">Implementation Readiness Review
+                    <div class="duration-label">Duration: 1 week</div>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-bar milestone" style="left: 93.75%; width: 6.25%;">
+                        READINESS
+                        <div class="progress-indicator" style="width: 0%;">0%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color critical-path"></div>
+                    <span>Critical Path Tasks</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color normal-task"></div>
+                    <span>Normal Tasks</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color dependent-task"></div>
+                    <span>Dependent Tasks</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color milestone"></div>
+                    <span>Milestones & Deliverables</span>
+                </div>
+            </div>
+            
+            <div class="phase-summary">
+                <strong>Critical Path Analysis:</strong> The critical path includes five key migration tasks: (1) Stakeholder Alignment & Project Charter → (2) IT Infrastructure Discovery & Mapping → (3) Application Portfolio Classification → (4) Network Architecture Review → (5) Security Posture Assessment → (6) Migration Planning. Any delays in these horizontal bar activities will directly impact the overall 16-week project timeline. Dependencies are shown with arrows connecting related tasks.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
